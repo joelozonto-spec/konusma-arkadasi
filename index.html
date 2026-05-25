@@ -1,0 +1,811 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Konuşma Arkadaşım</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#4A90E2">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            padding: 10px;
+        }
+
+        .container {
+            display: flex;
+            gap: 10px;
+            max-width: 1400px;
+            margin: 0 auto;
+            height: calc(100vh - 20px);
+        }
+
+        .panel {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 15px;
+            overflow-y: auto;
+        }
+
+        .left-panel {
+            width: 280px;
+            flex-shrink: 0;
+        }
+
+        .middle-panel {
+            width: 250px;
+            flex-shrink: 0;
+        }
+
+        .right-panel {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .panel-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #4A90E2;
+        }
+
+        .person-item, .category-item {
+            padding: 12px;
+            margin-bottom: 8px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            cursor: pointer;
+            border-left: 4px solid #4A90E2;
+            transition: all 0.3s ease;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .person-item:hover, .category-item:hover {
+            background: #e3f2fd;
+            transform: translateX(5px);
+        }
+
+        .person-item.active, .category-item.active {
+            background: #4A90E2;
+            color: white;
+            border-left-color: #2563eb;
+        }
+
+        .delete-btn {
+            background: #ff4757;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 4px 8px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: background 0.3s;
+        }
+
+        .delete-btn:hover {
+            background: #ff3838;
+        }
+
+        .add-btn {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #4A90E2 0%, #357abd 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: all 0.3s;
+        }
+
+        .add-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(74, 144, 226, 0.4);
+        }
+
+        .add-btn:active {
+            transform: translateY(0);
+        }
+
+        .word-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 12px;
+        }
+
+        .word-card {
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            min-height: 150px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .word-card:hover {
+            border-color: #4A90E2;
+            box-shadow: 0 4px 12px rgba(74, 144, 226, 0.2);
+            transform: translateY(-4px);
+        }
+
+        .word-image {
+            width: 100%;
+            height: 80px;
+            object-fit: cover;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+
+        .word-text {
+            font-weight: bold;
+            color: #333;
+            font-size: 14px;
+            margin-bottom: 10px;
+            word-wrap: break-word;
+        }
+
+        .speak-btn {
+            width: 100%;
+            padding: 8px;
+            background: #4A90E2;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: bold;
+            transition: background 0.3s;
+            margin-bottom: 5px;
+        }
+
+        .speak-btn:hover {
+            background: #357abd;
+        }
+
+        .delete-word-btn {
+            width: 100%;
+            padding: 6px;
+            background: #ff4757;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 11px;
+        }
+
+        .delete-word-btn:hover {
+            background: #ff3838;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            max-width: 400px;
+            width: 90%;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #555;
+            font-weight: 500;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-family: inherit;
+            font-size: 14px;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #4A90E2;
+            box-shadow: 0 0 5px rgba(74, 144, 226, 0.3);
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .modal-buttons button {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: #4A90E2;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #357abd;
+        }
+
+        .btn-secondary {
+            background: #e0e0e0;
+            color: #333;
+        }
+
+        .btn-secondary:hover {
+            background: #d0d0d0;
+        }
+
+        .empty-state {
+            text-align: center;
+            color: #999;
+            padding: 40px 20px;
+        }
+
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+
+        .color-picker {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 8px;
+        }
+
+        .color-option {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 3px solid transparent;
+            transition: all 0.3s;
+        }
+
+        .color-option.selected {
+            border-color: #333;
+            transform: scale(1.1);
+        }
+
+        .image-preview {
+            width: 100%;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 6px;
+            margin-top: 10px;
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+            width: 100%;
+        }
+
+        .file-input-wrapper input[type=file] {
+            position: absolute;
+            left: -9999px;
+        }
+
+        .file-input-label {
+            display: block;
+            padding: 10px;
+            background: #f0f0f0;
+            border: 2px dashed #4A90E2;
+            border-radius: 6px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .file-input-label:hover {
+            background: #e8f4fd;
+        }
+
+        @media (max-width: 1024px) {
+            .middle-panel {
+                display: none;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+                height: auto;
+            }
+
+            .left-panel, .middle-panel, .right-panel {
+                width: 100%;
+                height: auto;
+                max-height: 50vh;
+            }
+
+            .word-grid {
+                grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Sol Panel: Kişiler -->
+        <div class="panel left-panel">
+            <div class="panel-title">👥 Kişiler</div>
+            <div id="personList"></div>
+            <button class="add-btn" onclick="openAddPersonModal()">+ Yeni Kişi</button>
+        </div>
+
+        <!-- Orta Panel: Kategoriler -->
+        <div class="panel middle-panel">
+            <div class="panel-title">📂 Kategoriler</div>
+            <div id="categoryList"></div>
+            <button class="add-btn" onclick="openAddCategoryModal()" id="addCategoryBtn" style="display: none;">+ Yeni Kategori</button>
+        </div>
+
+        <!-- Sağ Panel: Kelimeler -->
+        <div class="panel right-panel">
+            <div class="panel-title">🎤 Kelimeler/Cümleler</div>
+            <div id="wordContainer"></div>
+            <button class="add-btn" onclick="openAddWordModal()" id="addWordBtn" style="display: none;">+ Yeni Kelime/Cümle</button>
+        </div>
+    </div>
+
+    <!-- Modal: Yeni Kişi -->
+    <div class="modal" id="addPersonModal">
+        <div class="modal-content">
+            <div class="modal-title">Yeni Kişi Ekle</div>
+            <div class="form-group">
+                <label>Kişi Adı:</label>
+                <input type="text" id="personNameInput" placeholder="Örn: Mehmet">
+            </div>
+            <div class="modal-buttons">
+                <button class="btn-primary" onclick="addPerson()">Ekle</button>
+                <button class="btn-secondary" onclick="closeModal('addPersonModal')">İptal</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Yeni Kategori -->
+    <div class="modal" id="addCategoryModal">
+        <div class="modal-content">
+            <div class="modal-title">Yeni Kategori Ekle</div>
+            <div class="form-group">
+                <label>Kategori Adı:</label>
+                <input type="text" id="categoryNameInput" placeholder="Örn: Temel İhtiyaçlar">
+            </div>
+            <div class="form-group">
+                <label>Renk Seç:</label>
+                <div class="color-picker" id="colorPicker"></div>
+            </div>
+            <div class="modal-buttons">
+                <button class="btn-primary" onclick="addCategory()">Ekle</button>
+                <button class="btn-secondary" onclick="closeModal('addCategoryModal')">İptal</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Yeni Kelime -->
+    <div class="modal" id="addWordModal">
+        <div class="modal-content">
+            <div class="modal-title">Yeni Kelime/Cümle Ekle</div>
+            <div class="form-group">
+                <label>Kelime/Cümle:</label>
+                <textarea id="wordInput" placeholder="Örn: Merhaba, Bana yardım et"></textarea>
+            </div>
+            <div class="form-group">
+                <label>Resim (İsteğe Bağlı):</label>
+                <div class="file-input-wrapper">
+                    <input type="file" id="wordImageInput" accept="image/*" onchange="previewImage()">
+                    <label class="file-input-label" for="wordImageInput">Resim Seçin</label>
+                </div>
+                <img id="imagePreview" style="display: none;" class="image-preview">
+            </div>
+            <div class="modal-buttons">
+                <button class="btn-primary" onclick="addWord()">Ekle</button>
+                <button class="btn-secondary" onclick="closeModal('addWordModal')">İptal</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const COLORS = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#98D8C8', '#F7DC6F', '#BB8FCE', '#85C1E2'];
+        let selectedColor = COLORS[0];
+        let data = {
+            people: []
+        };
+        let selectedPersonId = null;
+        let selectedCategoryId = null;
+
+        // LocalStorage'dan veri yükle
+        function loadData() {
+            const saved = localStorage.getItem('konusmaArkadasi');
+            if (saved) {
+                data = JSON.parse(saved);
+            }
+        }
+
+        // Veriyi LocalStorage'a kaydet
+        function saveData() {
+            localStorage.setItem('konusmaArkadasi', JSON.stringify(data));
+        }
+
+        // Renk seçici oluştur
+        function initColorPicker() {
+            const picker = document.getElementById('colorPicker');
+            COLORS.forEach(color => {
+                const div = document.createElement('div');
+                div.className = 'color-option' + (color === selectedColor ? ' selected' : '');
+                div.style.backgroundColor = color;
+                div.onclick = () => {
+                    document.querySelectorAll('.color-option').forEach(el => el.classList.remove('selected'));
+                    div.classList.add('selected');
+                    selectedColor = color;
+                };
+                picker.appendChild(div);
+            });
+        }
+
+        // Kişi ekle
+        function addPerson() {
+            const name = document.getElementById('personNameInput').value.trim();
+            if (!name) {
+                alert('Lütfen kişi adı girin');
+                return;
+            }
+
+            const person = {
+                id: Date.now(),
+                name: name,
+                categories: [
+                    { id: Date.now() + 1, name: 'Temel İhtiyaçlar', color: COLORS[0], words: [] },
+                    { id: Date.now() + 2, name: 'Duygular', color: COLORS[1], words: [] },
+                    { id: Date.now() + 3, name: 'Sorular', color: COLORS[2], words: [] },
+                    { id: Date.now() + 4, name: 'Selamlaşma', color: COLORS[3], words: [] }
+                ]
+            };
+
+            data.people.push(person);
+            saveData();
+            renderPeople();
+            closeModal('addPersonModal');
+            document.getElementById('personNameInput').value = '';
+        }
+
+        // Kişileri render et
+        function renderPeople() {
+            const list = document.getElementById('personList');
+            list.innerHTML = '';
+
+            if (data.people.length === 0) {
+                list.innerHTML = '<div class="empty-state"><div class="empty-state-icon">👤</div>Henüz kişi eklenmedi</div>';
+                return;
+            }
+
+            data.people.forEach(person => {
+                const div = document.createElement('div');
+                div.className = 'person-item' + (person.id === selectedPersonId ? ' active' : '');
+                div.innerHTML = `
+                    <span onclick="selectPerson(${person.id})">${person.name}</span>
+                    <button class="delete-btn" onclick="deletePerson(${person.id})">Sil</button>
+                `;
+                list.appendChild(div);
+            });
+        }
+
+        // Kişi seç
+        function selectPerson(id) {
+            selectedPersonId = id;
+            selectedCategoryId = null;
+            renderPeople();
+            renderCategories();
+            renderWords();
+        }
+
+        // Kişi sil
+        function deletePerson(id) {
+            if (confirm('Bu kişiyi silmek istediğinize emin misiniz?')) {
+                data.people = data.people.filter(p => p.id !== id);
+                if (selectedPersonId === id) {
+                    selectedPersonId = null;
+                    selectedCategoryId = null;
+                }
+                saveData();
+                renderPeople();
+                renderCategories();
+                renderWords();
+            }
+        }
+
+        // Kategorileri render et
+        function renderCategories() {
+            const list = document.getElementById('categoryList');
+            const btn = document.getElementById('addCategoryBtn');
+
+            if (!selectedPersonId) {
+                list.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📂</div>Kişi seçin</div>';
+                btn.style.display = 'none';
+                return;
+            }
+
+            const person = data.people.find(p => p.id === selectedPersonId);
+            list.innerHTML = '';
+
+            person.categories.forEach(category => {
+                const div = document.createElement('div');
+                div.className = 'category-item' + (category.id === selectedCategoryId ? ' active' : '');
+                div.style.borderLeftColor = category.color;
+                div.innerHTML = `
+                    <span onclick="selectCategory(${person.id}, ${category.id})">${category.name}</span>
+                    <button class="delete-btn" onclick="deleteCategory(${person.id}, ${category.id})">Sil</button>
+                `;
+                list.appendChild(div);
+            });
+
+            btn.style.display = 'block';
+        }
+
+        // Kategori seç
+        function selectCategory(personId, categoryId) {
+            selectedCategoryId = categoryId;
+            renderCategories();
+            renderWords();
+        }
+
+        // Kategori sil
+        function deleteCategory(personId, categoryId) {
+            if (confirm('Bu kategoriyi silmek istediğinize emin misiniz?')) {
+                const person = data.people.find(p => p.id === personId);
+                person.categories = person.categories.filter(c => c.id !== categoryId);
+                if (selectedCategoryId === categoryId) {
+                    selectedCategoryId = null;
+                }
+                saveData();
+                renderCategories();
+                renderWords();
+            }
+        }
+
+        // Kategori ekle
+        function addCategory() {
+            const name = document.getElementById('categoryNameInput').value.trim();
+            if (!name) {
+                alert('Lütfen kategori adı girin');
+                return;
+            }
+
+            const person = data.people.find(p => p.id === selectedPersonId);
+            const category = {
+                id: Date.now(),
+                name: name,
+                color: selectedColor,
+                words: []
+            };
+
+            person.categories.push(category);
+            saveData();
+            renderCategories();
+            closeModal('addCategoryModal');
+            document.getElementById('categoryNameInput').value = '';
+            selectedColor = COLORS[0];
+        }
+
+        // Kelimeleri render et
+        function renderWords() {
+            const container = document.getElementById('wordContainer');
+            const btn = document.getElementById('addWordBtn');
+
+            if (!selectedCategoryId) {
+                container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">🎤</div>Kategori seçin</div>';
+                btn.style.display = 'none';
+                return;
+            }
+
+            const person = data.people.find(p => p.id === selectedPersonId);
+            const category = person.categories.find(c => c.id === selectedCategoryId);
+
+            if (category.words.length === 0) {
+                container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📝</div>Henüz kelime eklenmedi</div>';
+            } else {
+                container.innerHTML = '<div class="word-grid" id="wordGrid"></div>';
+                const grid = document.getElementById('wordGrid');
+
+                category.words.forEach(word => {
+                    const div = document.createElement('div');
+                    div.className = 'word-card';
+                    let imageHtml = '';
+                    if (word.image) {
+                        imageHtml = `<img src="${word.image}" class="word-image" alt="${word.text}">`;
+                    }
+                    div.innerHTML = `
+                        ${imageHtml}
+                        <div class="word-text">${word.text}</div>
+                        <button class="speak-btn" onclick="speak('${word.text.replace(/'/g, "\\'")}')">🔊 Oku</button>
+                        <button class="delete-word-btn" onclick="deleteWord(${person.id}, ${category.id}, ${word.id})">Sil</button>
+                    `;
+                    grid.appendChild(div);
+                });
+            }
+
+            btn.style.display = 'block';
+        }
+
+        // Kelime ekle
+        function addWord() {
+            const text = document.getElementById('wordInput').value.trim();
+            if (!text) {
+                alert('Lütfen kelime veya cümle girin');
+                return;
+            }
+
+            const person = data.people.find(p => p.id === selectedPersonId);
+            const category = person.categories.find(c => c.id === selectedCategoryId);
+
+            const word = {
+                id: Date.now(),
+                text: text,
+                image: null
+            };
+
+            // Resim varsa ekle
+            const imageInput = document.getElementById('wordImageInput');
+            if (imageInput.files && imageInput.files[0]) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    word.image = e.target.result;
+                    category.words.push(word);
+                    saveData();
+                    renderWords();
+                    closeModal('addWordModal');
+                    document.getElementById('wordInput').value = '';
+                    imageInput.value = '';
+                    document.getElementById('imagePreview').style.display = 'none';
+                };
+                reader.readAsDataURL(imageInput.files[0]);
+            } else {
+                category.words.push(word);
+                saveData();
+                renderWords();
+                closeModal('addWordModal');
+                document.getElementById('wordInput').value = '';
+            }
+        }
+
+        // Kelime sil
+        function deleteWord(personId, categoryId, wordId) {
+            if (confirm('Bu kelimeyi silmek istediğinize emin misiniz?')) {
+                const person = data.people.find(p => p.id === personId);
+                const category = person.categories.find(c => c.id === categoryId);
+                category.words = category.words.filter(w => w.id !== wordId);
+                saveData();
+                renderWords();
+            }
+        }
+
+        // Sesli okuma
+        function speak(text) {
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'tr-TR';
+            utterance.rate = 0.9;
+            speechSynthesis.speak(utterance);
+        }
+
+        // Resim önizleme
+        function previewImage() {
+            const file = document.getElementById('wordImageInput').files[0];
+            const preview = document.getElementById('imagePreview');
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    preview.src = e.target.result;
+                    preview.style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        // Modal işlemleri
+        function openAddPersonModal() {
+            document.getElementById('addPersonModal').classList.add('show');
+            document.getElementById('personNameInput').focus();
+        }
+
+        function openAddCategoryModal() {
+            selectedColor = COLORS[0];
+            document.getElementById('colorPicker').innerHTML = '';
+            initColorPicker();
+            document.getElementById('addCategoryModal').classList.add('show');
+            document.getElementById('categoryNameInput').focus();
+        }
+
+        function openAddWordModal() {
+            document.getElementById('addWordModal').classList.add('show');
+            document.getElementById('wordInput').focus();
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('show');
+        }
+
+        // Modal dışında tıkla kapat
+        window.onclick = (event) => {
+            if (event.target.classList.contains('modal')) {
+                event.target.classList.remove('show');
+            }
+        };
+
+        // Başlat
+        loadData();
+        renderPeople();
+        renderCategories();
+        renderWords();
+
+        // Service Worker kayıt et
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js').catch(err => console.log('SW registration failed:', err));
+        }
+    </script>
+</body>
+</html>
